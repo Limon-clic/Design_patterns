@@ -340,6 +340,166 @@ class ProductB2 implements AbstractProductB {
  }
  ```
 
+## Структурные шаблоны проектирования
+
+5) Фасад - предоставляет упрощенный интерфейс для сложной системы.
+
+	[Википедия](https://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D1%81%D0%B0%D0%B4_(%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F))
+
+	[tproger.ru](https://tproger.ru/translations/design-patterns-simple-words-2/#25)
+
+```Java
+/* Complex parts */
+
+class CPU {
+    public void freeze() {
+        System.out.println("freeze");
+    }
+
+    public void jump(long position) {
+        System.out.println("jump position = " + position);
+    }
+
+    public void execute() {
+        System.out.println("execute");
+    }
+}
+
+class Memory {
+    public void load(long position, byte[] data) {
+        System.out.println("load position = " + position + ", data = " + data);
+    }
+}
+
+class HardDrive {
+    public byte[] read(long lba, int size) {
+        System.out.println("read lba = " + lba + ", size = " + size);
+        return new byte[size];
+    }
+}
+
+/* Facade */
+
+class Computer {
+    private final static long BOOT_ADDRESS = 1L;
+    private final static long BOOT_SECTOR = 2L;
+    private final static int SECTOR_SIZE = 3;
+
+    private CPU cpu;
+    private Memory memory;
+    private HardDrive hardDrive;
+
+    public Computer() {
+        this.cpu = new CPU();
+        this.memory = new Memory();
+        this.hardDrive = new HardDrive();
+    }
+
+    public void startComputer() {
+        cpu.freeze();
+        memory.load(BOOT_ADDRESS, hardDrive.read(BOOT_SECTOR, SECTOR_SIZE));
+        cpu.jump(BOOT_ADDRESS);
+        cpu.execute();
+    }
+}
+
+/* Client */
+
+class Application {
+    public static void main(String[] args) {
+        Computer computer = new Computer();
+	    computer.startComputer();
+    }
+}
+```
+
+6) Декоратор
+
+	[Википедия](https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D0%BA%D0%BE%D1%80%D0%B0%D1%82%D0%BE%D1%80_(%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F))
+
+	[tproger.ru](https://tproger.ru/translations/design-patterns-simple-words-2/#24)
+
+```Java
+
+public interface Troll {
+  void attack();
+  int getAttackPower();
+  void fleeBattle();
+}
+
+@Slf4j
+public class SimpleTroll implements Troll {
+
+  @Override
+  public void attack() {
+    LOGGER.info("The troll tries to grab you!");
+  }
+
+  @Override
+  public int getAttackPower() {
+    return 10;
+  }
+
+  @Override
+  public void fleeBattle() {
+    LOGGER.info("The troll shrieks in horror and runs away!");
+  }
+}
+
+@Slf4j
+public class ClubbedTroll implements Troll {
+
+  private final Troll decorated;
+
+  public ClubbedTroll(Troll decorated) {
+    this.decorated = decorated;
+  }
+
+  @Override
+  public void attack() {
+    decorated.attack();
+    LOGGER.info("The troll swings at you with a club!");
+  }
+
+  @Override
+  public int getAttackPower() {
+    return decorated.getAttackPower() + 10;
+  }
+
+  @Override
+  public void fleeBattle() {
+    decorated.fleeBattle();
+  }
+}
+
+// simple troll
+LOGGER.info("A simple looking troll approaches.");
+var troll = new SimpleTroll();
+troll.attack();
+troll.fleeBattle();
+LOGGER.info("Simple troll power: {}.\n", troll.getAttackPower());
+
+// change the behavior of the simple troll by adding a decorator
+LOGGER.info("A troll with huge club surprises you.");
+var clubbedTroll = new ClubbedTroll(troll);
+clubbedTroll.attack();
+clubbedTroll.fleeBattle();
+LOGGER.info("Clubbed troll power: {}.\n", clubbedTroll.getAttackPower());
+/*
+Program output:
+
+A simple looking troll approaches.
+The troll tries to grab you!
+The troll shrieks in horror and runs away!
+Simple troll power: 10.
+
+A troll with huge club surprises you.
+The troll tries to grab you!
+The troll swings at you with a club!
+The troll shrieks in horror and runs away!
+Clubbed troll power: 20.
+*/
+```
 ### Источники:
 * [habr.com](https://habr.com/ru/post/210288/)
 * [tproger.ru. Порождающие шаблоны](https://tproger.ru/translations/design-patterns-simple-words-1/#16)
